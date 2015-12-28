@@ -1,6 +1,6 @@
 # Noonoo
 
-![Noonoo](https://github.com/kiuKisas/noonoo/blob/master/noonoo.png "noonoo")
+![Noonoo](https://github.com/kiuKisas/noonoo/blob/master/noonoo.png "noonoo")  
 Noonoo is a tiny project cleaner that help you to maintening a clear project. It can performed 3 tasks just for you:
 
 - delete file which start, end or named by characters defined in conf file
