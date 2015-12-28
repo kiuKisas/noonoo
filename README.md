@@ -1,8 +1,8 @@
-##  ,."""..
-## / (o)(o)\             Noo-noo
-## L   \ \ /
-##  \...| |        tiny project cleaner
-##      (__)
+  ,."""..
+ / (o)(o)\             Noo-noo
+ L   \ \ /
+  \...| |        tiny project cleaner
+      (__)
 
 Noonoo is a tiny project cleaner that help you to maintening a clear project. It can performed 3 tasks just for you:
 
