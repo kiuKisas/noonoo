@@ -1,0 +1,22 @@
+########################################
+#                                      #
+#      Welcome to Noo-noo brain !!     #
+#    Here you can define its options   #
+#  See README.md for more information  #
+#            Good cleaning !           #
+#                                      #
+########################################
+
+# delete file mode
+del_end='~ #'
+del_beg=''
+del_del=''
+
+# remove line mode
+rm_head_line=5
+rm_head_cara='#'
+rm_foot_line=0
+rm_foot_cara=''
+
+# auto-indentation mode
+indent_style='llvm'

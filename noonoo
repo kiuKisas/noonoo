@@ -1,0 +1,264 @@
+#!/bin/sh
+
+# var
+directory="./";
+conf="";
+rm_head_line=0;
+optstring="hc:p:idr";
+
+# print functions
+function print_noonoo() {
+  printf '\n%s\n' '  ,."""..';
+  printf '%s\n' ' / (o)(o)\             Noo-noo';
+  printf '%s\n' ' L   \ \ /';
+  printf '%s\n' '  \...| |        tiny project cleaner';
+  printf '%s\n\n' '      (__)';
+}
+
+function print_help() {
+  printf '%s\n\n' 'Action:'
+  printf '%s\t\t\t%s\n' '-d' 'delete file mode'
+  printf '%s\t\t\t%s\n' '-r' 'remove line mode (not implemented yet)'
+  printf '%s\t\t\t%s\n' '-i' 'indent file mode (not implemented yet)'
+  printf '\nOption:\n\n'
+  printf '%s\t\t%s\n' '-c <conf path>' 'give conf file (Default: ./.noonoo)'
+  printf '%s\t%s\n' '-p <directory path>' 'give directory where noonoo have to clean (Default: ./)'
+}
+
+function print_mode() {
+  echo -en "\033[1m\033[33m[$1] \033[0m\033[0m"
+}
+function print_bold() {
+  echo -e "\033[1m$1\033[0m"
+}
+function print_error() {
+  >&2 echo -e "\033[31mERROR: $1\033[0m"
+}
+
+function test_file_find() {
+  # $1 = rm_head_cara
+  # $2 = _path
+  # $3 = nbr_line
+
+
+  printf "$1";
+  return 0;
+}
+
+function check_for_one_line() {
+  # $1 = line
+  # $2 = rm_head_cara
+  printf '%s\n' "oo";
+  printf '%s\n' `printf '%s\n' "$rm_head_cara" | awk 'BEGIN {RS=""}{
+    print $n;
+  }'`;
+  # awk of all rm_head_cara, if its work with start line, so return 1
+  return 0;
+}
+
+function print_file_find() {
+  # $1 = file
+  # $2 = rm_head_cara
+  # $3 = nbr_line
+
+  _nf=`printf '%s\n' "$1" | awk 'BEGIN {RS=""}{ print NF }'`;
+  for (( i=1; i <= $_nf; ++i ))
+  do
+    _path=`printf '%s\n' "$1" | awk -v i="$i" 'BEGIN {RS=""}{print $i}'`;
+    in_file=`head -n "$3" "$_path"`;
+    nbr=`printf '%s\n' "$in_file" | wc -l`;
+    printf '%d%s\n' "$_nf" "$_path"
+    for (( j=1; j <= $nbr; ++j ))
+    do
+      _line=`printf '%s\n' "$in_file" | awk -v j="$j" 'BEGIN {RS=""}{print $j}'`;
+      check_for_one_line "$_line" "$rm_head_cara";
+    done
+  done
+}
+# common functions
+function get_path_to_find() {
+  beg="$1_beg"
+  end="$1_end"
+  inc="$1_inc"
+  # trim
+  beg=`printf '%s\n' "${!beg}" | awk '{$1=$1};1'`
+  end=`printf '%s\n' "${!end}" | awk '{$1=$1};1'`
+  inc=`printf '%s\n' "${!inc}" | awk '{$1=$1};1'`
+  if [ ${#beg} -gt 0 ]
+    then
+    printf '%s' "$beg" | sed 's/[[:blank:]]/ /g; s/[^^ ]/[&]/g; s/\^/\\^/g' | awk '{ gsub(" ", "[^/]*\\|^.*/", $0); print "^.*/"$0"[^/]*" }'
+  fi
+  if [ ${#inc} -gt 0 ]
+    then
+    printf '%s' "$inc" | sed 's/[[:blank:]]/ /g; s/[^^ ]/[&]/g; s/\^/\\^/g' | awk '{ gsub(" ", "[^/]*$\\|.*", $0); print ".*"$0"[^/]*$" }'
+  fi
+  if [ ${#end} -gt 0 ]
+    then
+    printf '%s' "$end" | sed 's/[[:blank:]]/ /g; s/[^^ ]/[&]/g; s/\^/\\^/g' | awk '{ gsub(" ", "$\\|.*", $0); print ".*"$0"$" }'
+  fi
+}
+function gen_path_to_find() {
+  printf '%s' "`get_path_to_find $1`" | awk 'BEGIN {RS=""}{gsub(/\n/,"\\|",$0); print $0}';
+}
+function ask_question() {
+  printf '%s' "Are you sure to "$1" $(printf '%s\n' "$2" | wc -l) file(s)? [Y/n]";
+  read -n 1 -r answer;
+  printf '\n';
+  if [ ${#answer} -eq 0 ] || [[ $answer == [Yy] ]]
+    then
+    return 1;
+  fi
+  return 0;
+}
+# mode functions
+function del_file_mode() {
+  print_mode "delete file mode";
+  path=`gen_path_to_find "del"`;
+  printf '%s\n' 'launch find command..'
+  file=`find "$directory" -regex "$path" -type f`;
+  if [ ${#file} -gt 0 ]
+    then
+    print_bold "deleting following file(s):";
+    printf '%s\n' "$file";
+    ask_question "delete" "$file";
+    if [ $? -eq 1 ]
+      then
+      printf '%s\n' "$file" | xargs rm -v;
+      print_bold 'Done !';
+    else
+    print_error 'Abort..';
+    fi
+  else
+    print_bold "any file to delete";
+  fi
+}
+function rm_line_mode() {
+  print_mode "remove head line mode";
+  path=`gen_path_to_find "rm_head"`;
+  printf '%s\n' 'launch find command..'
+  if [ ${#path} -gt 0 ]
+    then
+    file=`find "$directory" -regex "$path" -type f`;
+  else
+    file=`find "$directory" -type f`;
+  fi
+  printf '%s' "remove first "$rm_head_line" line(s) ";
+  if [ ${#rm_head_cara} -gt 0 ]
+    then
+    printf '%s%s%s\n' "if they start(s) by " "`printf '\x27%s\x27' "$rm_head_cara" | awk '{gsub(" ", "\x27 or \x27", $0); print $0 }'`" ' on this following file(s):';
+    print_file_find "$file" "$rm_head_cara", "$rm_head_line";
+  else
+    printf '%s\n%s\n' 'on this following file(s):' "$file";
+  fi
+  # sed "1d" file.txt > file.tmp && mv file.tmp file.txt;
+}
+function indent_file_mode() {
+  print_mode "indentation file mode";
+}
+
+# conf fonctions
+function default_conf() {
+  if [ -f "$HOME/.noonoo" ] && [ -r "$HOME/.noonoo" ]
+    then
+    conf="$HOME/.noonoo",
+  elif [ -f "./.noonoo" ] && [ -r "./.noonoo" ]
+    then
+    conf="./.noonoo";
+  else
+    print_bold "any config file found..\n[default mode]";
+    return 0;
+  fi
+  secure_load;
+}
+function load_conf() {
+  if [ -f $conf ] && [ -r $conf ]
+    then
+    secure_load;
+  else
+    echo print_bold "can't read $conf..\n[default mode]"
+  fi
+}
+function secure_load() {
+  if egrep -q -v "^[[:blank:]]*#|^[[:blank:]]*[a-Z_]+=[0-9]$|^[[:blank:]]*[rdi]+[a-Z_]+='+.*[']|^[[:blank:]]*$" "$conf"
+    then
+    print_error "conf file is unsafe. Please make it safe (without any functions and useless variables)."
+    exit 1;
+  fi
+  source $conf;
+}
+
+# launch
+if [ $# -eq 0 ]
+  then
+  print_noonoo
+  print_help
+  exit 1;
+else
+  while getopts ":$optstring" opt   # help and check
+  do
+    case $opt in
+      h)
+      print_noonoo
+      print_help
+      exit
+      ;;
+      :)
+      >&2 echo "noonoo: invalid option -- '$OPTARG'"
+      >&2  echo -e "type « noonoo -h » for more information."
+      exit 1
+      ;;
+    esac
+  done
+  OPTIND=1
+  while getopts "$optstring" opt   # path and conf
+  do
+    case $opt in
+      c )
+      if [ -f $OPTARG ] && [ -r $OPTARG ]
+        then
+        conf=$OPTARG
+      else
+        >&2 echo "noonoo: can't read $OPTARG"
+        >&2  echo -e "type « noonoo -h » for more information."
+        exit 1
+      fi
+      ;;
+      p )
+      if [ -d $OPTARG ]
+        then
+        directory=$OPTARG
+      else
+        >&2 echo "noonoo: $OPTARG isn't a directory"
+        >&2  echo -e "type « noonoo -h » for more information."
+        exit 1
+      fi
+      ;;
+    esac
+  done
+  if [ ${#conf} -eq 0 ] # load conf file
+    then
+    default_conf;
+  else
+    load_conf;
+  fi
+  #check slurp
+  OPTIND=1
+  while getopts "$optstring" opt # mode
+  do
+    case $opt in
+      d )
+      del_file_mode;
+      ;;
+      r )
+      rm_line_mode;
+      ;;
+      i )
+      indent_file_mode;
+      ;;
+      : | \?)
+      >&2  echo -e "type « noonoo -h » for more information."
+      exit 1
+      ;;
+    esac
+  done
+fi
