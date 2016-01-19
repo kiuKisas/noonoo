@@ -1,6 +1,5 @@
 #!/bin/sh
 
-# var
 directory="./";
 conf="";
 rm_head_line=0;
